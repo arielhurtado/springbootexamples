@@ -1,0 +1,31 @@
+version: '3.8'
+services:
+  booking-service:
+    build:
+      context: ./booking-microservice
+      dockerfile: Dockerfile
+    container_name: booking-service
+    ports:
+      - "8080:8080" # Ajusta el puerto si es necesario
+    environment:
+      - SERVER_PORT=8080
+    networks:
+      - app-network
+    depends_on:
+      - information-service
+
+  information-service:
+    build:
+      context: ./information-microservice
+      dockerfile: Dockerfile
+    container_name: information-service
+    ports:
+      - "8081:8081" # Ajusta el puerto si es necesario
+    environment:
+      - SERVER_PORT=8081
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge

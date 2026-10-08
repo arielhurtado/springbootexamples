@@ -1,0 +1,15 @@
+com/example/bookings/repository/BookingRepository.class
+com/example/bookings/model/IGymClassRepository.class
+com/example/bookings/BookingApplication.class
+com/example/bookings/model/IUserRepository.class
+com/example/bookings/model/GymClass.class
+com/example/bookings/model/Booking.class
+com/example/bookings/model/Facility.class
+com/example/bookings/model/ServiceInformationClient.class
+com/example/bookings/model/IBookingRepository.class
+com/example/bookings/infra/dto/BookingRequest.class
+com/example/bookings/model/User.class
+com/example/bookings/service/BookingService.class
+com/example/bookings/controller/BookingController.class
+com/example/bookings/repository/GymClassRepository.class
+com/example/bookings/model/Instructor.class

@@ -1,0 +1,12 @@
+com/unicauca/bookings/presentation/GUIBookings$1.class
+com/unicauca/clientproducthttpclient/domain/entities/Facility.class
+com/unicauca/clientproducthttpclient/domain/entities/GymClass.class
+com/unicauca/clientproducthttpclient/domain/entities/Instructor.class
+com/unicauca/bookings/presentation/GUIBookings$2.class
+com/unicauca/clientproducthttpclient/domain/entities/Booking.class
+com/unicauca/bookings/presentation/GUIBookings$2$1.class
+com/unicauca/clientproducthttpclient/domain/entities/User.class
+com/unicauca/bookings/domain/services/BookingService.class
+com/unicauca/bookings/access/BookingRepository.class
+com/unicauca/bookings/presentation/GUIBookings.class
+com/unicauca/bookings/access/IBookingRepository.class
