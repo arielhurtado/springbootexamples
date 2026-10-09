@@ -19,6 +19,9 @@ Esta es una aplicacacion de microservicios que hace reservas de clases de un gim
 - Spring Boot 2.6.6.
 - No usa motor de bases de datos, persiste en arreglos de objetos
 
+## Documentación
+- [BookingGym-Sync — Documentación de Implementación Técnica](BookingGym-Sync/docs/arquitectura.md)
+
 ### Clonar el repositorio
 ```bash
 git clone https://github.com/libardopa/BookingGym.git
