@@ -68,7 +68,6 @@ C4Context
 El diagrama de contenedores abre la caja negra del sistema y muestra las aplicaciones, bases de datos y brokers que lo componen. Nótese que **ambos canales de comunicación están presentes simultáneamente**: la llamada síncrona vía Feign y la publicación asíncrona vía RabbitMQ.
 
 ```mermaid
-```mermaid
 C4Container
     title Vista de contenedores - BookingGym
 
