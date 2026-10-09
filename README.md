@@ -530,26 +530,27 @@ La arquitectura de tres niveles es una estructura cliente-servidor **antecesora*
 
 ```mermaid
 flowchart TB
-    subgraph Capas["🧱 Capas (un proceso)"]
+    subgraph Capas["Capas (un solo proceso)"]
         direction TB
-        P[Presentación] --> L[Lógica]
+        P[Presentacion] --> L[Logica]
         L --> D[Acceso a datos]
     end
 
-    subgraph Tiers["🖥️ Niveles (varios procesos, una sola app)"]
+    subgraph Tiers["Niveles - una sola app distribuida"]
         direction TB
         C1[Cliente] --> A1[Servidor de aplicaciones]
         A1 --> DB1[(BD)]
     end
 
-    subgraph MS["🚀 Microservicios (varias apps independientes)"]
+    subgraph MS["Microservicios - apps independientes"]
         direction LR
-        U[MS Usuarios] -.red.- P2[MS Pedidos]
-        P2 -.red.- PR[MS Productos]
+        U[MS Usuarios] -.-> P2[MS Pedidos]
+        P2 -.-> PR[MS Productos]
     end
 
-    Capas -.evoluciona a.-> Tiers
-    Tiers -.se reinterpreta como.-> MS
+    Capas ==> Tiers
+    Tiers ==> MS
+```
 
 ### 5.2 El ejemplo BookingGym-Sync
 
