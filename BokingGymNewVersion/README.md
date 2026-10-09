@@ -22,3 +22,7 @@ Esta es una aplicacacion de microservicios que hace reservas de clases de un gim
 ### Clonar el repositorio
 ```bash
 git clone https://github.com/libardopa/BookingGym.git
+
+## Documentación
+
+- [BookingGym-Sync — Documentación de Implementación Técnica](BookingGym-Sync/docs/arquitectura.md)
