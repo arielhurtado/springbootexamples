@@ -107,32 +107,39 @@ C4Container
 El diagrama de componentes abre el contenedor MS Booking y muestra sus piezas internas. Obsérvese que **coexisten dos conectores de salida**: uno síncrono (`ServiceInformationClient`) y uno asíncrono (`BookingEventPublisher`).
 
 ```mermaid
-C4Component
-    title Vista de componentes - MS Booking
+flowchart TB
+    subgraph boundary["MS Booking"]
+        direction TB
+        controller["BookingController<br/><i>Spring MVC</i>"]
+        service["BookingService<br/><i>Spring Service</i>"]
+        repo["BookingRepository<br/><i>Spring Data JPA</i>"]
+        feign["ServiceInformationClient<br/><i>Spring Cloud OpenFeign</i>"]
+        publisher["BookingEventPublisher<br/><i>Spring AMQP</i>"]
+        mapper["BookingMapper<br/><i>MapStruct</i>"]
+    end
 
-    Container_Boundary(msBooking, "MS Booking") {
-        Component(controller, "BookingController", "Spring MVC", "Expone endpoints REST: POST /bookings, GET /bookings/{id}")
-        Component(service, "BookingService", "Spring Service", "Orquesta la logica de reserva")
-        Component(repo, "BookingRepository", "Spring Data JPA", "Acceso a datos de reservas")
-        Component(feign, "ServiceInformationClient", "Spring Cloud OpenFeign", "Cliente HTTP declarativo (sincrono) hacia MS Information")
-        Component(publisher, "BookingEventPublisher", "Spring AMQP", "Publica eventos (asincrono) al broker")
-        Component(mapper, "BookingMapper", "MapStruct", "Convierte entre entidad y DTO")
-    }
+    bdBooking[("BD Booking<br/>PostgreSQL")]
+    msInformation["MS Information<br/>Spring Boot :8081"]
+    broker{{"RabbitMQ<br/>Broker"}}
 
-    ContainerDb(bdBooking, "BD Booking", "PostgreSQL", "Persiste reservas")
-    Container(msInformation, "MS Information", "Spring Boot", "Gestiona usuarios")
-    ContainerQueue(broker, "RabbitMQ", "Broker", "Transporta eventos")
+    controller -->|invoca| service
+    service -->|usa| mapper
+    service -->|persiste| repo
+    service -->|consulta usuario| feign
+    service -->|publica evento| publisher
+    feign -->|GET /users/id<br/>REST/JSON| msInformation
+    publisher -->|convertAndSend<br/>AMQP| broker
+    repo -->|SQL/JDBC| bdBooking
 
-    Rel(controller, service, "Invoca", "Java")
-    Rel(service, mapper, "Usa", "Java")
-    Rel(service, repo, "Persiste", "Java")
-    Rel(service, feign, "Consulta usuario", "Java")
-    Rel(feign, msInformation, "GET /users/{id}", "REST/JSON")
-    Rel(service, publisher, "Publica evento", "Java")
-    Rel(publisher, broker, "convertAndSend", "AMQP")
-    Rel(repo, bdBooking, "SQL", "JDBC")
+    classDef component fill:#5B9BD5,stroke:#003DA5,color:#fff
+    classDef database fill:#F2A900,stroke:#8B0A1F,color:#fff
+    classDef broker fill:#C8102E,stroke:#8B0A1F,color:#fff
+    classDef external fill:#F4F6F9,stroke:#003DA5,color:#000
 
-    UpdateLayoutConfig($c4ShapeInRow="3", $c4BoundaryInRow="1")
+    class controller,service,repo,feign,publisher,mapper component
+    class bdBooking database
+    class broker broker
+    class msInformation external
 ```
 
 **Lectura arquitectónica del diagrama**:
