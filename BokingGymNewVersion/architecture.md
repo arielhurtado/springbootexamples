@@ -25,8 +25,6 @@
 
 ---
 
-> **Nota de edición:** Se normalizó la sintaxis de los bloques Mermaid para evitar cierres de código inconsistentes y se reorganizaron los diagramas para mejorar su lectura. Los ejemplos Java conservan la lógica original, pero se ajustó su formato y se corrigió el `throw` de la excepción en `BookingService`.
-
 ## 1. Introducción
 
 **BookingGym-Sync** es un sistema de reservas de clases de gimnasio implementado como una arquitectura de microservicios. Está compuesto por dos aplicaciones Spring Boot independientes que colaboran a través de la red: **MS Booking** (puerto 8080) y **MS Information** (puerto 8081).
@@ -46,10 +44,11 @@ El diagrama de contexto muestra el sistema como una caja negra y sus interaccion
 
 ```mermaid
 C4Context
-    title Vista de contexto - BookingGym
+    title Vista de contexto - Sistema BookingGym
 
     Person(usuario, "Usuario", "Reserva clases de gimnasio desde una aplicacion web o movil")
     System(bookinggym, "BookingGym", "Sistema de reservas de clases de gimnasio")
+
     System_Ext(email, "Servicio de correo", "Envia correos de confirmacion")
     System_Ext(pago, "Pasarela de pago", "Procesa el pago de la reserva (futuro)")
 
@@ -75,22 +74,21 @@ C4Container
     Person(usuario, "Usuario", "Reserva clases")
 
     System_Boundary(bookinggym, "BookingGym") {
-        Container(msBooking, "MS Booking", "Spring Boot", "Gestiona reservas - Puerto 8080")
-        Container(msInformation, "MS Information", "Spring Boot", "Gestiona usuarios - Puerto 8081")
-        ContainerDb(bdBooking, "BD Booking", "PostgreSQL", "Persiste reservas")
-        ContainerDb(bdInformation, "BD Information", "PostgreSQL", "Persiste usuarios")
-        ContainerQueue(broker, "RabbitMQ", "RabbitMQ", "Transporta eventos")
+        Container(msBooking, "MS Booking", "Spring Boot", "Gestiona reservas. Expone API REST en :8080")
+        Container(msInformation, "MS Information", "Spring Boot", "Gestiona usuarios. Expone API REST en :8081")
+        ContainerDb(bdBooking, "BD Booking", "PostgreSQL", "Persiste reservas y clases")
+        ContainerDb(bdInformation, "BD Information", "PostgreSQL", "Persiste usuarios y direcciones")
+        ContainerQueue(broker, "Broker de mensajes", "RabbitMQ", "Transporta eventos entre servicios")
     }
 
-    Rel(usuario, msBooking, "Consulta y crea reservas", "HTTPS / JSON")
-    Rel(msBooking, msInformation, "Consulta usuario", "REST / Feign")
+    Rel(usuario, msBooking, "Consulta y crea reservas", "HTTPS/JSON")
+    Rel(msBooking, msInformation, "Consulta datos de usuario (sincrono)", "REST/Feign")
     Rel(msBooking, bdBooking, "Lee y escribe", "JDBC")
     Rel(msInformation, bdInformation, "Lee y escribe", "JDBC")
-    Rel(msBooking, broker, "Publica eventos", "AMQP")
-    Rel(broker, msInformation, "Entrega eventos", "AMQP")
+    Rel(msBooking, broker, "Publica eventos (asincrono)", "AMQP")
+    Rel(broker, msInformation, "Consume eventos", "AMQP")
 
     UpdateLayoutConfig($c4ShapeInRow="3", $c4BoundaryInRow="1")
-```
 ```
 
 **Lectura arquitectónica del diagrama**:
@@ -109,41 +107,34 @@ C4Container
 
 El diagrama de componentes abre el contenedor MS Booking y muestra sus piezas internas. Obsérvese que **coexisten dos conectores de salida**: uno síncrono (`ServiceInformationClient`) y uno asíncrono (`BookingEventPublisher`).
 
+```mermaid
+C4Component
+    title Vista de componentes - MS Booking
 
-flowchart TB
-    subgraph boundary["MS Booking"]
-        direction TB
-        controller["BookingController<br/><i>Spring MVC</i>"]
-        service["BookingService<br/><i>Spring Service</i>"]
-        repo["BookingRepository<br/><i>Spring Data JPA</i>"]
-        feign["ServiceInformationClient<br/><i>Spring Cloud OpenFeign</i>"]
-        publisher["BookingEventPublisher<br/><i>Spring AMQP</i>"]
-        mapper["BookingMapper<br/><i>MapStruct</i>"]
-    end
+    Container_Boundary(msBooking, "MS Booking") {
+        Component(controller, "BookingController", "Spring MVC", "Expone endpoints REST: POST /bookings, GET /bookings/{id}")
+        Component(service, "BookingService", "Spring Service", "Orquesta la logica de reserva")
+        Component(repo, "BookingRepository", "Spring Data JPA", "Acceso a datos de reservas")
+        Component(feign, "ServiceInformationClient", "Spring Cloud OpenFeign", "Cliente HTTP declarativo (sincrono) hacia MS Information")
+        Component(publisher, "BookingEventPublisher", "Spring AMQP", "Publica eventos (asincrono) al broker")
+        Component(mapper, "BookingMapper", "MapStruct", "Convierte entre entidad y DTO")
+    }
 
-    bdBooking[("BD Booking<br/>PostgreSQL")]
-    msInformation["MS Information<br/>Spring Boot :8081"]
-    broker{{"RabbitMQ<br/>Broker"}}
+    ContainerDb(bdBooking, "BD Booking", "PostgreSQL", "Persiste reservas")
+    Container(msInformation, "MS Information", "Spring Boot", "Gestiona usuarios")
+    ContainerQueue(broker, "RabbitMQ", "Broker", "Transporta eventos")
 
-    controller -->|invoca| service
-    service -->|usa| mapper
-    service -->|persiste| repo
-    service -->|consulta usuario| feign
-    service -->|publica evento| publisher
-    feign -->|GET /users/id<br/>REST/JSON| msInformation
-    publisher -->|convertAndSend<br/>AMQP| broker
-    repo -->|SQL/JDBC| bdBooking
+    Rel(controller, service, "Invoca", "Java")
+    Rel(service, mapper, "Usa", "Java")
+    Rel(service, repo, "Persiste", "Java")
+    Rel(service, feign, "Consulta usuario", "Java")
+    Rel(feign, msInformation, "GET /users/{id}", "REST/JSON")
+    Rel(service, publisher, "Publica evento", "Java")
+    Rel(publisher, broker, "convertAndSend", "AMQP")
+    Rel(repo, bdBooking, "SQL", "JDBC")
 
-    classDef component fill:#5B9BD5,stroke:#003DA5,color:#fff
-    classDef database fill:#F2A900,stroke:#8B0A1F,color:#fff
-    classDef broker fill:#C8102E,stroke:#8B0A1F,color:#fff
-    classDef external fill:#F4F6F9,stroke:#003DA5,color:#000
-
-    class controller,service,repo,feign,publisher,mapper component
-    class bdBooking database
-    class broker broker
-    class msInformation external
-
+    UpdateLayoutConfig($c4ShapeInRow="3", $c4BoundaryInRow="1")
+```
 
 **Lectura arquitectónica del diagrama**:
 
@@ -165,15 +156,15 @@ C4Component
     title Vista de componentes - MS Information
 
     Container_Boundary(msInformation, "MS Information") {
-        Component(userController, "UserController", "Spring MVC", "Expone endpoints REST")
+        Component(userController, "UserController", "Spring MVC", "Expone endpoints REST: GET /users/{id}, POST /users")
         Component(userService, "UserService", "Spring Service", "Gestiona la logica de usuarios")
         Component(userRepo, "UserRepository", "Spring Data JPA", "Acceso a datos de usuarios")
-        Component(consumer, "UserConsumerService", "Spring AMQP", "Escucha eventos de reserva de forma asincrona")
+        Component(consumer, "UserConsumerService", "Spring AMQP", "Escucha eventos de reserva (asincrono)")
         Component(userMapper, "UserMapper", "MapStruct", "Convierte entre entidad y DTO")
     }
 
     ContainerDb(bdInformation, "BD Information", "PostgreSQL", "Persiste usuarios")
-    ContainerQueue(broker, "RabbitMQ", "RabbitMQ", "Transporta eventos")
+    ContainerQueue(broker, "RabbitMQ", "Broker", "Transporta eventos")
 
     Rel(userController, userService, "Invoca", "Java")
     Rel(userService, userMapper, "Usa", "Java")
@@ -194,67 +185,67 @@ El diagrama UML muestra las clases principales del sistema y sus relaciones.
 ```mermaid
 classDiagram
     class BookingController {
-        - BookingService bookingService
-        + createBooking(BookingDto) BookingDto
-        + getBookingById(Long) BookingDto
+        -BookingService bookingService
+        +createBooking(BookingDto) BookingDto
+        +getBookingById(Long) BookingDto
     }
 
     class BookingService {
-        - BookingRepository bookingRepository
-        - ServiceInformationClient informationClient
-        - BookingEventPublisher eventPublisher
-        - BookingMapper bookingMapper
-        + createBooking(Long, Long, BookingDto) BookingDto
-        + getBookingById(Long) BookingDto
+        -BookingRepository bookingRepository
+        -ServiceInformationClient informationClient
+        -BookingEventPublisher eventPublisher
+        -BookingMapper bookingMapper
+        +createBooking(Long, Long, BookingDto) BookingDto
+        +getBookingById(Long) BookingDto
     }
 
     class BookingRepository {
         <<interface>>
-        + findById(Long) Optional~Booking~
-        + save(Booking) Booking
+        +findById(Long) Optional~Booking~
+        +save(Booking) Booking
     }
 
     class ServiceInformationClient {
         <<interface>>
-        + getUserById(Long) UserDto
+        +getUserById(Long) UserDto
     }
 
     class BookingEventPublisher {
-        - RabbitTemplate rabbitTemplate
-        + publishBookingCreated(BookingDto) void
+        -RabbitTemplate rabbitTemplate
+        +publishBookingCreated(BookingDto) void
     }
 
     class BookingMapper {
         <<interface>>
-        + toDto(Booking) BookingDto
-        + toEntity(BookingDto) Booking
+        +toDto(Booking) BookingDto
+        +toEntity(BookingDto) Booking
     }
 
     class Booking {
-        - Long id
-        - Long userId
-        - LocalDateTime bookingDate
-        - String status
+        -Long id
+        -Long userId
+        -LocalDateTime bookingDate
+        -String status
     }
 
     class BookingDto {
-        - Long id
-        - Long userId
-        - String userName
-        - LocalDateTime bookingDate
+        -Long id
+        -Long userId
+        -String userName
+        -LocalDateTime bookingDate
     }
 
     class UserDto {
-        - Long id
-        - String firstName
-        - String lastName
-        - String email
+        -Long id
+        -String firstName
+        -String lastName
+        -String email
     }
 
     BookingController --> BookingService : usa
     BookingService --> BookingRepository : usa
-    BookingService --> ServiceInformationClient : sincronamente
-    BookingService --> BookingEventPublisher : asincronamente
+    BookingService --> ServiceInformationClient : sincrono
+    BookingService --> BookingEventPublisher : asincrono
     BookingService --> BookingMapper : usa
     BookingMapper --> Booking : convierte
     BookingMapper --> BookingDto : convierte
@@ -287,12 +278,12 @@ sequenceDiagram
     C->>S: createBooking(5, ...)
     activate S
 
-    Note over S,I: FLUJO SINCRONO - Feign
+    Note over S,I: FLUJO SINCRONO (Feign)
     S->>F: getUserById(5)
     activate F
-    F->>I: GET /users/5 - HTTP
+    F->>I: GET /users/5 (HTTP)
     activate I
-    I-->>F: 200 OK - UserDto
+    I-->>F: 200 OK {UserDto}
     deactivate I
     F-->>S: UserDto
     deactivate F
@@ -336,25 +327,25 @@ sequenceDiagram
     C->>S: createBooking(5, ...)
     activate S
 
-    Note over S: Persistencia local - ya realizada
-    Note over S,Q: FLUJO ASINCRONO - RabbitMQ
+    Note over S: Persistencia local (ya hecha)
+    Note over S,Q: FLUJO ASINCRONO (RabbitMQ)
 
     S->>P: publishBookingCreated(booking)
     activate P
     P->>Q: convertAndSend(bookingQueue, booking)
     Q-->>P: ACK
     deactivate P
+    Note over S: No espera procesamiento del consumidor
 
-    Note over S: No espera el procesamiento del consumidor
     S-->>C: BookingDto
     deactivate S
     C-->>U: 201 Created
     deactivate C
 
     Note over Q,Cons: Procesamiento posterior e independiente
-    Q->>Cons: Entrega mensaje
+    Q->>Cons: entrega mensaje
     activate Cons
-    Cons->>Cons: Procesar evento
+    Cons->>Cons: procesar evento
     deactivate Cons
 ```
 
@@ -467,12 +458,10 @@ public class BookingService {
     private final BookingEventPublisher eventPublisher;
     private final BookingMapper bookingMapper;
 
-    public BookingService(
-        BookingRepository bookingRepository,
-        ServiceInformationClient informationClient,
-        BookingEventPublisher eventPublisher,
-        BookingMapper bookingMapper
-) {
+    public BookingService(BookingRepository bookingRepository,
+                          ServiceInformationClient informationClient,
+                          BookingEventPublisher eventPublisher,
+                          BookingMapper bookingMapper) {
         this.bookingRepository = bookingRepository;
         this.informationClient = informationClient;
         this.eventPublisher = eventPublisher;
@@ -480,11 +469,8 @@ public class BookingService {
     }
 
     @Transactional
-    public BookingDto createBooking(
-        Long userId,
-        Long gymClassId,
-        BookingDto bookingDto
-) {
+    public BookingDto createBooking(Long userId, Long gymClassId,
+                                    BookingDto bookingDto) {
         try {
             // --- FLUJO SINCRONO ---
             // Consulta bloqueante al MS Information
@@ -509,10 +495,8 @@ public class BookingService {
                 "El usuario con ID " + userId + " no existe");
         } catch (FeignException e) {
             throw new RuntimeException(
-        "Error al invocar el microservicio de informacion: "
-                + e.getMessage(),
-        e
-);
+                "Error al invocar el microservicio de informacion: "
+                + e.getMessage(), e);
         }
     }
 
@@ -556,15 +540,11 @@ public class BookingController {
 
     @PostMapping
     public ResponseEntity<BookingDto> createBooking(
-        @RequestParam Long userId,
-        @RequestParam Long gymClassId,
-        @RequestBody BookingDto bookingDto
-) {
+            @RequestParam Long userId,
+            @RequestParam Long gymClassId,
+            @RequestBody BookingDto bookingDto) {
         BookingDto created = bookingService.createBooking(
-        userId,
-        gymClassId,
-        bookingDto
-);
+                userId, gymClassId, bookingDto);
         return new ResponseEntity<>(created, HttpStatus.CREATED);
     }
 
