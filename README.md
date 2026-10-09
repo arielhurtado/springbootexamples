@@ -1,7 +1,7 @@
 # API RESTful, DTO y Comunicación de Microservicios
 **Prof. Julio Ariel Hurtado Alegría**
 
-**Ingeniería de Software — Grupo de Investigación IDIS**  
+**Ingeniería de Software II - 2026-2 Grupo B — Grupo de Investigación IDIS**  
 **Universidad del Cauca, Popayán, 2026**
 
 ---
