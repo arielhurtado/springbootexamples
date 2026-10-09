@@ -68,27 +68,27 @@ C4Context
 El diagrama de contenedores abre la caja negra del sistema y muestra las aplicaciones, bases de datos y brokers que lo componen. Nótese que **ambos canales de comunicación están presentes simultáneamente**: la llamada síncrona vía Feign y la publicación asíncrona vía RabbitMQ.
 
 ```mermaid
+```mermaid
 C4Container
     title Vista de contenedores - BookingGym
 
     Person(usuario, "Usuario", "Reserva clases")
 
     System_Boundary(bookinggym, "BookingGym") {
-        Container(msBooking, "MS Booking", "Spring Boot", "Gestiona reservas. Expone API REST en :8080")
-        Container(msInformation, "MS Information", "Spring Boot", "Gestiona usuarios. Expone API REST en :8081")
-        ContainerDb(bdBooking, "BD Booking", "PostgreSQL", "Persiste reservas y clases")
-        ContainerDb(bdInformation, "BD Information", "PostgreSQL", "Persiste usuarios y direcciones")
-        ContainerQueue(broker, "Broker de mensajes", "RabbitMQ", "Transporta eventos entre servicios")
+        Container(msBooking, "MS Booking", "Spring Boot", "Gestiona reservas. Puerto 8080")
+        Container(msInformation, "MS Information", "Spring Boot", "Gestiona usuarios. Puerto 8081")
+        ContainerDb(bdBooking, "BD Booking", "PostgreSQL", "Persiste reservas")
+        ContainerDb(bdInformation, "BD Information", "PostgreSQL", "Persiste usuarios")
+        ContainerQueue(broker, "Broker", "RabbitMQ", "Transporta eventos")
     }
 
     Rel(usuario, msBooking, "Consulta y crea reservas", "HTTPS/JSON")
-    Rel(msBooking, msInformation, "Consulta datos de usuario (sincrono)", "REST/Feign")
+    Rel(msBooking, msInformation, "Consulta usuario", "REST/Feign")
     Rel(msBooking, bdBooking, "Lee y escribe", "JDBC")
     Rel(msInformation, bdInformation, "Lee y escribe", "JDBC")
-    Rel(msBooking, broker, "Publica eventos (asincrono)", "AMQP")
-    Rel(broker, msInformation, "Consume eventos", "AMQP")
-
-    UpdateLayoutConfig($c4ShapeInRow="3", $c4BoundaryInRow="1")
+    Rel(msBooking, broker, "Publica eventos", "AMQP")
+    Rel(broker, msInformation, "Entrega eventos", "AMQP")
+```
 ```
 
 **Lectura arquitectónica del diagrama**:
