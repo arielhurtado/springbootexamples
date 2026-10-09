@@ -106,7 +106,7 @@ C4Container
 
 El diagrama de componentes abre el contenedor MS Booking y muestra sus piezas internas. Obsérvese que **coexisten dos conectores de salida**: uno síncrono (`ServiceInformationClient`) y uno asíncrono (`BookingEventPublisher`).
 
-```mermaid
+
 flowchart TB
     subgraph boundary["MS Booking"]
         direction TB
@@ -140,7 +140,7 @@ flowchart TB
     class bdBooking database
     class broker broker
     class msInformation external
-```
+
 
 **Lectura arquitectónica del diagrama**:
 
