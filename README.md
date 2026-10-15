@@ -48,7 +48,7 @@
 
 ## Prefacio
 
-Este libro nace de una constatación sencilla: la mayoría de los materiales sobre microservicios explican los conceptos de manera aislada. Se habla de REST sin explicar por qué sus restricciones importan. Se habla de DTOs sin mostrar cómo se mapean desde entidades JPA. Se habla de comunicación sin distinguir cuándo conviene lo síncrono y cuándo lo asíncrono. El resultado es un conocimiento fragmentado que el estudiante no logra integrar.
+Este documento nace de una constatación sencilla: la mayoría de los materiales sobre microservicios explican los conceptos de manera aislada. Se habla de REST sin explicar por qué sus restricciones importan. Se habla de DTOs sin mostrar cómo se mapean desde entidades JPA. Se habla de comunicación sin distinguir cuándo conviene lo síncrono y cuándo lo asíncrono. El resultado es un conocimiento fragmentado que el estudiante no logra integrar.
 
 Nuestra intención es distinta. Queremos construir un recorrido coherente que empiece por el diseño de la frontera de un servicio (la API RESTful), continúe por el modelado de los datos que cruzan esa frontera (los DTOs), y termine por los mecanismos que permiten a los servicios hablar entre sí (Feign, RabbitMQ). Todo ello con ejemplos concretos extraídos del repositorio público [springbootexamples](https://github.com/arielhurtado/springbootexamples), que contiene tres aplicaciones independientes pero complementarias:
 
