@@ -27,7 +27,7 @@
 - **MS Booking** (puerto 8080): gestiona las reservas.
 - **MS Information** (puerto 8081): gestiona el registro de usuarios.
 
-Cada microservicio mantiene su **propia base de datos PostgreSQL** (patrón *Database per Service*). Difieren en **cómo colaboran** y en **cómo modelan el usuario**:
+Cada microservicio mantiene su **propia base de datos H2** (patrón *Database per Service*). Difieren en **cómo colaboran** y en **cómo modelan el usuario**:
 
 | Aspecto | Caso 1 — Síncrono (Feign) | Caso 2 — Asíncrono (RabbitMQ) |
 |---|---|---|
@@ -52,8 +52,8 @@ flowchart TB
         direction LR
         msB["MS Booking<br/>Spring Boot :8080"]
         msI["MS Information<br/>Spring Boot :8081"]
-        dbB[("BD Booking<br/>PostgreSQL")]
-        dbI[("BD Information<br/>PostgreSQL")]
+        dbB[("BD Booking<br/>H2")]
+        dbI[("BD Information<br/>H2")]
     end
 
     usuario(["Usuario"])
@@ -325,8 +325,8 @@ flowchart TB
         direction LR
         msB["MS Booking<br/>Spring Boot :8080"]
         msI["MS Information<br/>Spring Boot :8081"]
-        dbB[("BD Booking<br/>PostgreSQL")]
-        dbI[("BD Information<br/>PostgreSQL")]
+        dbB[("BD Booking<br/>H2")]
+        dbI[("BD Information<br/>H2")]
         broker{{"RabbitMQ<br/>Broker"}}
     end
 
