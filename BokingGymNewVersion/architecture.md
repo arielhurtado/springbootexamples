@@ -87,7 +87,7 @@ flowchart TB
         gymRepo["GymClassRepository<br/><i>Spring Data JPA</i>"]
     end
 
-    bdBooking[("BD Booking")]
+    bdBooking[(""BD Booking<br/>H2"")]
     msInformation["MS Information :8081"]
 
     controller -->|createBooking| service
